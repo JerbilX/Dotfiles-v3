@@ -1,0 +1,11 @@
+# Temporary workflow files
+.issue_body
+.commit_msg
+.pr_body
+.issue_comment
+
+# OS and editor artifacts
+.DS_Store
+*.swp
+*~
+__pycache__/
