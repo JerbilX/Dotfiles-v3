@@ -34,6 +34,7 @@ Repositorio público de configuración declarativa, skills universales de gobern
 
 ```text
 Dotfiles-v3/
+├── bootstrap.sh                      # Aprovisionamiento idempotente de ~/.gemini/config/
 ├── config/
 │   ├── GEMINI.md                     # Núcleo ejecutivo global 100% agnóstico de stack
 │   └── skills.json                   # Registro declarativo nativo de skills globales (~/)
@@ -70,7 +71,17 @@ Dotfiles-v3/
 
 ---
 
-## 4. Activación de Plugins por Dominio en Proyectos
+## 4. Aprovisionamiento Global (`bootstrap.sh`)
+
+Para sincronizar de forma idempotente `~/.gemini/config/GEMINI.md` y `~/.gemini/config/skills.json` (limpiando cualquier `.git` embebido o symlinks legacy en `~/.gemini/config/skills/`):
+
+```bash
+./bootstrap.sh
+```
+
+---
+
+## 5. Activación de Plugins por Dominio en Proyectos
 
 Los plugins de [`plugins/`](./plugins/) **no se instalan globalmente** en `~/.gemini/config/plugins/` para evitar cargar servidores MCP y reglas de un dominio en proyectos de otro stack.
 
