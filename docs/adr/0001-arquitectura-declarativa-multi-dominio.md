@@ -25,8 +25,8 @@ La configuración global previa en `~/.gemini/config/` mezclaba directivas ejecu
   * *Pro:* Permite ensamblar perfiles a medida.
   * *Contra:* Introduce sobreingeniería innecesaria cuando Antigravity ya soporta carga jerárquica, `skills.json` y `plugins.json` nativos.
 * **Opción 3: Repositorio declarativo `Dotfiles-v3` con núcleo global agnóstico, catálogo de plugins por dominio y registro nativo vía `skills.json` / `plugins.json`**
-  * *Pro:* `GEMINI.md` queda 100% ejecutivo y agnóstico; los skills globales se registran declarativamente con `~/`; cada proyecto selecciona sus plugins de dominio mediante `.agents/plugins.json` (`include_only`).
-  * *Contra:* Requiere un `bootstrap.sh` mínimo e idempotente para sincronizar `config/GEMINI.md` y `config/skills.json` hacia `~/.gemini/config/`.
+  * *Pro:* `GEMINI.md` queda 100% ejecutivo y agnóstico; los skills globales se registran declarativamente en `config/skills.json` con `~/` (que `bootstrap.sh` expande a `$HOME/` en `~/.gemini/config/skills.json` para compatibilidad con `fs.ParseAbsolutePath` del Language Server); cada proyecto selecciona sus plugins de dominio mediante `.agents/plugins.json` (`"path": "../Dotfiles-v3/plugins"`, `include_only`).
+  * *Contra:* Requiere un `bootstrap.sh` mínimo e idempotente para sincronizar `config/GEMINI.md` y `config/skills.json` hacia `~/.gemini/config/` e incluir `Dotfiles-v3` en los `projectResources` de los proyectos que consumen plugins de dominio.
 
 ## Decisión Adoptada
 Opción elegida: **"Opción 3: Repositorio declarativo `Dotfiles-v3` con núcleo global agnóstico, catálogo de plugins por dominio y registro nativo vía `skills.json` / `plugins.json`"**, porque garantiza aislamiento total entre dominios, elimina los symlinks manuales y respeta estrictamente el principio YAGNI usando las capacidades nativas del sistema de personalización de Antigravity.
