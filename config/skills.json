@@ -8,6 +8,9 @@
     },
     {
       "path": "~/Proyectos-IA-V3/PR-Reviewer-Agent/skill"
+    },
+    {
+      "path": "~/Proyectos-IA-V3/Project-Manager-Agent/skill"
     }
   ]
 }
