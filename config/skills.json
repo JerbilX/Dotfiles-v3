@@ -1,0 +1,13 @@
+{
+  "entries": [
+    {
+      "path": "~/Proyectos-IA-V3/Dotfiles-v3/skills"
+    },
+    {
+      "path": "~/Proyectos-IA-V3/Codebase-Auditor-Agent/skill"
+    },
+    {
+      "path": "~/Proyectos-IA-V3/PR-Reviewer-Agent/skill"
+    }
+  ]
+}

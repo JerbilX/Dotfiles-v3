@@ -1,0 +1,8 @@
+{
+  "name": "eso-addon-suite",
+  "displayName": "ESO Addon Suite",
+  "description": "Herramientas MCP, reglas de compliance ESOUI/Baertram y skill especializado para desarrollo de addons de The Elder Scrolls Online (EsoUI).",
+  "version": "1.0.0",
+  "author": "JerbilX",
+  "repository": "https://github.com/JerbilX/Dotfiles-v3"
+}
