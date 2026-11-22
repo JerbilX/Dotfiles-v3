@@ -13,8 +13,8 @@ Repositorio público de configuración declarativa, skills universales de gobern
    - [`config/GEMINI.md`](./config/GEMINI.md) es **100% ejecutivo y agnóstico de stack tecnológico** (Modelo de colaboración Arquitecto + Staff Engineer, principios YAGNI/Modularidad/Verificación/Higiene en refactors, Gobernanza ADR y Flujo Git `issue-driven-workflow`).
    - Las reglas, servidores MCP y skills específicos de una tecnología (por ejemplo, Lua/EsoUI para *The Elder Scrolls Online*) se encapsulan en plugins de dominio dentro de [`plugins/`](./plugins/) y solo se cargan en los proyectos que los declaran explícitamente.
 3. **Cero Symlinks — Registro Declarativo Nativo:**
-   - Los skills globales se registran en `~/.gemini/config/skills.json` ([`config/skills.json`](./config/skills.json)) usando rutas `~/` que Antigravity escanea de forma nativa.
-   - Cada proyecto activa únicamente los plugins de su dominio mediante su propio archivo `.agents/plugins.json` con filtrado `include_only`.
+   - Los skills globales se declaran con rutas portables `~/` en [`config/skills.json`](./config/skills.json) y `bootstrap.sh` las expande a `$HOME/` al aprovisionar `~/.gemini/config/skills.json` (sorteando la falta de expansión de `~/` en `fs.ParseAbsolutePath` del Language Server).
+   - Cada proyecto activa únicamente los plugins de su dominio mediante su propio archivo `.agents/plugins.json` con `"path": "../Dotfiles-v3/plugins"` y filtrado `include_only`, incluyendo `Dotfiles-v3` en los `projectResources` del proyecto en Antigravity para satisfacer el confinamiento de raíces del workspace.
 
 ---
 
@@ -85,13 +85,13 @@ Para sincronizar de forma idempotente `~/.gemini/config/GEMINI.md` y `~/.gemini/
 
 Los plugins de [`plugins/`](./plugins/) **no se instalan globalmente** en `~/.gemini/config/plugins/` para evitar cargar servidores MCP y reglas de un dominio en proyectos de otro stack.
 
-Para activar un plugin de dominio en un proyecto específico (por ejemplo, `eso-addon-suite` en un addon de ESO), copia la plantilla [`templates/eso-addon/.agents/plugins.json`](./templates/eso-addon/.agents/plugins.json) en `.agents/plugins.json` en la raíz del proyecto:
+Para activar un plugin de dominio en un proyecto específico (por ejemplo, `eso-addon-suite` en un addon de ESO), incluye `Dotfiles-v3` en los `projectResources` del proyecto y copia la plantilla [`templates/eso-addon/.agents/plugins.json`](./templates/eso-addon/.agents/plugins.json) en `.agents/plugins.json` en la raíz del proyecto:
 
 ```json
 {
   "entries": [
     {
-      "path": "~/Proyectos-IA-V3/Dotfiles-v3/plugins",
+      "path": "../Dotfiles-v3/plugins",
       "include_only": ["eso-addon-suite"]
     }
   ]
