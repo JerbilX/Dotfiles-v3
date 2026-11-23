@@ -182,9 +182,22 @@ Cuando el usuario ordene promover los avances de `dev` a producción/estable (*"
    ```bash
    git push origin vX.Y.Z
    ```
+5. **Sincronizar `main` de vuelta a `dev` (preservar ancestro del tag):**
+   Al volver a `dev`, fusionar `main` hacia `dev` para que el merge commit etiquetado con `vX.Y.Z` sea ancestro directo de `dev` (usando `--ff-only` si `dev` no avanzó):
    ```bash
    git switch dev
    ```
+   ```bash
+   git pull --ff-only
+   ```
+   ```bash
+   git merge main
+   ```
+   ```bash
+   git push origin dev
+   ```
+   > [!NOTE]
+   > Al consultar cuál es el último release estable desde `dev` (o en repositorios donde no se haya hecho este back-merge), evitar `git describe --tags --abbrev=0` sobre `dev`; usar `git describe --tags --abbrev=0 origin/main` o `git tag -l 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n 1`.
 
 ---
 
