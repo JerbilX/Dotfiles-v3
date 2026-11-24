@@ -36,13 +36,18 @@ Protocolo canónico para transformar comentarios, reportes de bugs, observacione
 - Presentar un borrador compacto de cada issue propuesta **antes** de ejecutar `gh issue create`:
   - **Título:** formato Conventional Commits en inglés (`<tipo>(<alcance>): <descripción>`, salvo regla local distinta).
   - **Nivel estimado:** `N1` o `N2`.
+  - **Modelo recomendado:** `<fast|balanced|deep> (<Modelo Concreto>)`, consultando la tabla canónica vigente en `GEMINI.md` (evitando variantes *Orchestrator* para subagentes implementadores).
   - **Contexto / Alcance:** módulos afectados y si actualiza o se relaciona con alguna issue abierta.
   - **Criterios de aceptación:** lista breve y verificable.
 - Pedir confirmación explícita al Arquitecto (*"¿Confirmás que cree esta(s) issue(s) así, o ajustamos algo?"*) y **esperar su respuesta**.
 
 ### Paso 4: Creación Controlada y Parada Dura
 1. Recién tras el OK explícito del Arquitecto:
-   - Redactar `.issue_body` usando la herramienta nativa de escritura de archivos (formato `N1` o `N2` compatible con `issue-driven-workflow`).
+   - Redactar `.issue_body` usando la herramienta nativa de escritura de archivos (formato `N1` o `N2` compatible con `issue-driven-workflow`), encabezando siempre el archivo con los metadatos planos (sin depender de GitHub Labels):
+     ```markdown
+     **Ceremony:** <N1|N2>
+     **Model:** <fast|balanced|deep> (<Modelo Concreto>)
+     ```
    - Ejecutar la creación como llamada individual pura:
      ```bash
      gh issue create --title "<tipo>(<alcance>): <descripción>" --body-file .issue_body

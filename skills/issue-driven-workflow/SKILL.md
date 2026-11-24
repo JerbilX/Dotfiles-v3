@@ -56,9 +56,13 @@ fix/issue-15-savedvars ──(PR: Squash Merge)──┘
 
 ### Paso 1: Ingesta o Creación de la Issue
 - **Precondición:** Este flujo solo se ejecuta ante una orden explícita de implementación. Si el usuario planteó un bug, idea o mejora sin ordenar implementación, usar el skill `issue-refiner` y detenerse tras crear la(s) issue(s).
-- **Si la Issue ya existe:** Leer su especificación con `gh issue view <id>`.
+- **Si la Issue ya existe:** Leer su especificación con `gh issue view <id>` (incluyendo sus metadatos de cabecera `**Ceremony:**` y `**Model:**` si están presentes).
 - **Si la tarea surge en el chat con orden explícita de implementación inmediata y aún no tiene Issue:**
-  1. Redactar el cuerpo en `.issue_body` usando la herramienta nativa de escritura de archivos:
+  1. Redactar el cuerpo en `.issue_body` usando la herramienta nativa de escritura de archivos, incluyendo siempre en la cabecera los metadatos planos (según la tabla canónica de `GEMINI.md`, sin depender de GitHub Labels):
+     ```markdown
+     **Ceremony:** <N1|N2>
+     **Model:** <fast|balanced|deep> (<Modelo Concreto>)
+     ```
      - Para **N1**: Descripción concisa del cambio y criterio de verificación.
      - Para **N2**: Secciones `### Contexto / Problema`, `### Objetivos Técnicos` y `### Criterios de Aceptación`.
   2. Crear la Issue con GitHub CLI (llamada individual sin `&&` para conservar el *prefix-match*):
@@ -121,7 +125,7 @@ fix/issue-15-savedvars ──(PR: Squash Merge)──┘
 
 ### Paso 6.5: Auditoría Pre-Merge (`pr-reviewer`) — Solo N2 y `/goal`
 Si la tarea es **N2** o se está ejecutando bajo **`/goal`**, antes de dar el PR por listo para merge:
-1. **Delegar en Subagente Limpio:** Invocar `invoke_subagent` (`TypeName: "self"`, `Role: "PR Staff Reviewer"`) con contexto fresco (para evitar sesgo de autor), pasándole el path/repo y el número de PR recién creado, e instruyéndolo a leer y ejecutar el skill `pr-reviewer` publicando el review automáticamente en GitHub.
+1. **Delegar en Subagente Limpio:** Invocar `invoke_subagent` (`TypeName: "self"`, `Role: "PR Staff Reviewer"`, ajustando `Model` según el nivel/perfil de la tarea definido en `GEMINI.md`: `"flash"` para tareas `fast`/`N1`, e `"inherit"` o `"pro"` según corresponda en `N2` para perfiles `balanced`/`deep`, evitando variantes *Orchestrator*) con contexto fresco (para evitar sesgo de autor), pasándole el path/repo y el número de PR recién creado, e instruyéndolo a leer y ejecutar el skill `pr-reviewer` publicando el review automáticamente en GitHub.
 2. **Si el veredicto es `REQUEST_CHANGES`:**
    - Corregir los hallazgos `BLOCKER`, hacer commit y `git push` en la misma rama efímera, y volver a lanzar la auditoría hasta obtener `APPROVE` (si un blocker requiere decisión de diseño/arquitectura del usuario y no estás en `/goal`, consultar al usuario).
 3. **Si el veredicto es `APPROVE`:**
