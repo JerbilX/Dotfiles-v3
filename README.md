@@ -22,7 +22,7 @@ Repositorio público de configuración declarativa, skills universales de gobern
 
 | Repositorio | Rol en el Ecosistema | Integración con `Dotfiles-v3` |
 | :--- | :--- | :--- |
-| [**`JerbilX/Dotfiles-v3`**](https://github.com/JerbilX/Dotfiles-v3) | Núcleo declarativo global (`GEMINI.md`, `skills.json`), skills universales (`adr-manager`, `issue-driven-workflow`) y catálogo de plugins por dominio. | Repositorio base (`~/Proyectos-IA-V3/Dotfiles-v3`). |
+| [**`JerbilX/Dotfiles-v3`**](https://github.com/JerbilX/Dotfiles-v3) | Núcleo declarativo global (`GEMINI.md`, `skills.json`), skills universales (`adr-manager`, `issue-refiner`, `issue-driven-workflow`) y catálogo de plugins por dominio. | Repositorio base (`~/Proyectos-IA-V3/Dotfiles-v3`). |
 | [**`JerbilX/Codebase-Auditor-Agent`**](https://github.com/JerbilX/Codebase-Auditor-Agent) | CLI en Python y skill de solo lectura (`codebase-auditor`) para auditorías deterministas de deuda técnica, LOC, deriva arquitectónica y violaciones de ADRs. | Registrado declarativamente en [`config/skills.json`](./config/skills.json) (`~/Proyectos-IA-V3/Codebase-Auditor-Agent/skill`). |
 | [**`JerbilX/PR-Reviewer-Agent`**](https://github.com/JerbilX/PR-Reviewer-Agent) | CLI en Python y skill (`pr-reviewer`) para auditoría automatizada de Pull Requests con rúbrica Staff Software Engineer en GitHub. | Registrado declarativamente en [`config/skills.json`](./config/skills.json) (`~/Proyectos-IA-V3/PR-Reviewer-Agent/skill`). |
 | [**`JerbilX/Project-Manager-Agent`**](https://github.com/JerbilX/Project-Manager-Agent) | CLI en Python (`pm-agent`) y skill (`project-manager`) para orquestación técnica de lotes de GitHub Issues extremo a extremo sobre `dev` con gates deterministas y aislamiento por subagentes. | Registrado declarativamente en [`config/skills.json`](./config/skills.json) (`~/Proyectos-IA-V3/Project-Manager-Agent/skill`). |
@@ -59,6 +59,8 @@ Dotfiles-v3/
 │   │   ├── SKILL.md
 │   │   └── resources/
 │   │       └── template.md
+│   ├── issue-refiner/                # Refinamiento de backlog por defecto (análisis + preguntas + borrador)
+│   │   └── SKILL.md
 │   └── issue-driven-workflow/        # Ciclo Git (dev -> main + SemVer Tags) y trazabilidad por Issues
 │       ├── SKILL.md
 │       └── references/

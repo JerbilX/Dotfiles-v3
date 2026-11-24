@@ -1,7 +1,7 @@
 ---
 name: issue-driven-workflow
 description: >-
-  Orchestrate task traceability and Git lifecycle using GitHub Issues, ephemeral branches off `dev`, Pull Requests, and stable releases to `main`. ACTIVATE whenever creating or implementing issues, initializing repositories, creating branches, committing changes, opening/merging PRs, or promoting `dev` to `main`. Operates 100% natively with standard `git` and `gh` CLI without external custom scripts.
+  Orchestrate task traceability and Git lifecycle using GitHub Issues, ephemeral branches off `dev`, Pull Requests, and stable releases to `main`. ACTIVATE ONLY when there is an explicit instruction to implement/execute changes, initialize repositories, create branches, commit code, open/merge PRs, or promote `dev` to `main`. Do NOT activate for backlog intake or issue refinement without an explicit execution order (use `issue-refiner` instead). Operates 100% natively with standard `git` and `gh` CLI without external custom scripts.
 ---
 
 # Issue-Driven Workflow (`dev` -> `main` + SemVer Tags)
@@ -55,8 +55,9 @@ fix/issue-15-savedvars ──(PR: Squash Merge)──┘
 ```
 
 ### Paso 1: Ingesta o Creación de la Issue
+- **Precondición:** Este flujo solo se ejecuta ante una orden explícita de implementación. Si el usuario planteó un bug, idea o mejora sin ordenar implementación, usar el skill `issue-refiner` y detenerse tras crear la(s) issue(s).
 - **Si la Issue ya existe:** Leer su especificación con `gh issue view <id>`.
-- **Si la tarea surge en el chat y aún no tiene Issue:**
+- **Si la tarea surge en el chat con orden explícita de implementación inmediata y aún no tiene Issue:**
   1. Redactar el cuerpo en `.issue_body` usando la herramienta nativa de escritura de archivos:
      - Para **N1**: Descripción concisa del cambio y criterio de verificación.
      - Para **N2**: Secciones `### Contexto / Problema`, `### Objetivos Técnicos` y `### Criterios de Aceptación`.
