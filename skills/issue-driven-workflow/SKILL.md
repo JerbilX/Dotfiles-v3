@@ -1,7 +1,7 @@
 ---
 name: issue-driven-workflow
 description: >-
-  Orchestrate task traceability and Git lifecycle using GitHub Issues, ephemeral branches off `dev`, Pull Requests, and stable releases to `main`. ACTIVATE whenever creating or implementing issues, initializing repositories, creating branches, committing changes, opening/merging PRs, or promoting `dev` to `main`. Operates 100% natively with standard `git` and `gh` CLI without external custom scripts.
+  Orchestrate task traceability and Git lifecycle using GitHub Issues, ephemeral branches off `dev`, Pull Requests, and stable releases to `main`. ACTIVATE ONLY when there is an explicit instruction to implement/execute changes, initialize repositories, create branches, commit code, open/merge PRs, or promote `dev` to `main`. Do NOT activate for backlog intake or issue refinement without an explicit execution order (use `issue-refiner` instead). Operates 100% natively with standard `git` and `gh` CLI without external custom scripts.
 ---
 
 # Issue-Driven Workflow (`dev` -> `main` + SemVer Tags)
@@ -55,9 +55,14 @@ fix/issue-15-savedvars ──(PR: Squash Merge)──┘
 ```
 
 ### Paso 1: Ingesta o Creación de la Issue
-- **Si la Issue ya existe:** Leer su especificación con `gh issue view <id>`.
-- **Si la tarea surge en el chat y aún no tiene Issue:**
-  1. Redactar el cuerpo en `.issue_body` usando la herramienta nativa de escritura de archivos:
+- **Precondición:** Este flujo solo se ejecuta ante una orden explícita de implementación. Si el usuario planteó un bug, idea o mejora sin ordenar implementación, usar el skill `issue-refiner` y detenerse tras crear la(s) issue(s).
+- **Si la Issue ya existe:** Leer su especificación con `gh issue view <id>` (incluyendo sus metadatos de cabecera `**Ceremony:**` y `**Model:**` si están presentes).
+- **Si la tarea surge en el chat con orden explícita de implementación inmediata y aún no tiene Issue:**
+  1. Redactar el cuerpo en `.issue_body` usando la herramienta nativa de escritura de archivos, incluyendo siempre en la cabecera los metadatos planos (según la tabla canónica de `GEMINI.md`, sin depender de GitHub Labels):
+     ```markdown
+     **Ceremony:** <N1|N2>
+     **Model:** <fast|balanced|deep> (<Modelo Concreto>)
+     ```
      - Para **N1**: Descripción concisa del cambio y criterio de verificación.
      - Para **N2**: Secciones `### Contexto / Problema`, `### Objetivos Técnicos` y `### Criterios de Aceptación`.
   2. Crear la Issue con GitHub CLI (llamada individual sin `&&` para conservar el *prefix-match*):
@@ -120,7 +125,7 @@ fix/issue-15-savedvars ──(PR: Squash Merge)──┘
 
 ### Paso 6.5: Auditoría Pre-Merge (`pr-reviewer`) — Solo N2 y `/goal`
 Si la tarea es **N2** o se está ejecutando bajo **`/goal`**, antes de dar el PR por listo para merge:
-1. **Delegar en Subagente Limpio:** Invocar `invoke_subagent` (`TypeName: "self"`, `Role: "PR Staff Reviewer"`) con contexto fresco (para evitar sesgo de autor), pasándole el path/repo y el número de PR recién creado, e instruyéndolo a leer y ejecutar el skill `pr-reviewer` publicando el review automáticamente en GitHub.
+1. **Delegar en Subagente Limpio:** Invocar `invoke_subagent` (`TypeName: "self"`, `Role: "PR Staff Reviewer"`, ajustando `Model` según el nivel/perfil de la tarea definido en `GEMINI.md`: `"flash"` para tareas `fast`/`N1`, e `"inherit"` o `"pro"` según corresponda en `N2` para perfiles `balanced`/`deep`, evitando variantes *Orchestrator*) con contexto fresco (para evitar sesgo de autor), pasándole el path/repo y el número de PR recién creado, e instruyéndolo a leer y ejecutar el skill `pr-reviewer` publicando el review automáticamente en GitHub.
 2. **Si el veredicto es `REQUEST_CHANGES`:**
    - Corregir los hallazgos `BLOCKER`, hacer commit y `git push` en la misma rama efímera, y volver a lanzar la auditoría hasta obtener `APPROVE` (si un blocker requiere decisión de diseño/arquitectura del usuario y no estás en `/goal`, consultar al usuario).
 3. **Si el veredicto es `APPROVE`:**
@@ -182,9 +187,22 @@ Cuando el usuario ordene promover los avances de `dev` a producción/estable (*"
    ```bash
    git push origin vX.Y.Z
    ```
+5. **Sincronizar `main` de vuelta a `dev` (preservar ancestro del tag):**
+   Al volver a `dev`, fusionar `main` hacia `dev` para que el merge commit etiquetado con `vX.Y.Z` sea ancestro directo de `dev` (usando `--ff-only` si `dev` no avanzó):
    ```bash
    git switch dev
    ```
+   ```bash
+   git pull --ff-only
+   ```
+   ```bash
+   git merge main
+   ```
+   ```bash
+   git push origin dev
+   ```
+   > [!NOTE]
+   > Al consultar cuál es el último release estable desde `dev` (o en repositorios donde no se haya hecho este back-merge), evitar `git describe --tags --abbrev=0` sobre `dev`; usar `git describe --tags --abbrev=0 origin/main` o `git tag -l 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n 1`.
 
 ---
 

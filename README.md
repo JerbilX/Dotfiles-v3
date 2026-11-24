@@ -10,7 +10,7 @@ Repositorio público de configuración declarativa, skills universales de gobern
    - **`Dotfiles-v3`** almacena **exclusivamente artefactos declarativos**: directivas ejecutivas globales (`config/GEMINI.md`), registro declarativo de skills (`config/skills.json`), skills universales sin dependencias externas (`skills/`), catálogo de plugins por dominio (`plugins/`) y plantillas de proyecto (`templates/`).
    - Las herramientas con código fuente Python, CLIs y suites de pruebas unitarias viven en sus propios repositorios independientes.
 2. **Aislamiento de Contexto por Dominio (Cero Contaminación entre Stacks):**
-   - [`config/GEMINI.md`](./config/GEMINI.md) es **100% ejecutivo y agnóstico de stack tecnológico** (Modelo de colaboración Arquitecto + Staff Engineer, principios YAGNI/Modularidad/Verificación/Higiene en refactors, Gobernanza ADR y Flujo Git `issue-driven-workflow`).
+   - [`config/GEMINI.md`](./config/GEMINI.md) es **100% ejecutivo y agnóstico de stack tecnológico** (Modelo de colaboración Arquitecto + Staff Engineer, principios YAGNI/Modularidad/Verificación/Higiene en refactors, Gobernanza ADR, Flujo Git `issue-driven-workflow`, modo ejecutivo `"dame al PM"` y tabla canónica centralizada de perfiles de modelo `fast` / `balanced` / `deep`).
    - Las reglas, servidores MCP y skills específicos de una tecnología (por ejemplo, Lua/EsoUI para *The Elder Scrolls Online*) se encapsulan en plugins de dominio dentro de [`plugins/`](./plugins/) y solo se cargan en los proyectos que los declaran explícitamente.
 3. **Cero Symlinks — Registro Declarativo Nativo:**
    - Los skills globales se declaran con rutas portables `~/` en [`config/skills.json`](./config/skills.json) y `bootstrap.sh` las expande a `$HOME/` al aprovisionar `~/.gemini/config/skills.json` (sorteando la falta de expansión de `~/` en `fs.ParseAbsolutePath` del Language Server).
@@ -22,9 +22,10 @@ Repositorio público de configuración declarativa, skills universales de gobern
 
 | Repositorio | Rol en el Ecosistema | Integración con `Dotfiles-v3` |
 | :--- | :--- | :--- |
-| [**`JerbilX/Dotfiles-v3`**](https://github.com/JerbilX/Dotfiles-v3) | Núcleo declarativo global (`GEMINI.md`, `skills.json`), skills universales (`adr-manager`, `issue-driven-workflow`) y catálogo de plugins por dominio. | Repositorio base (`~/Proyectos-IA-V3/Dotfiles-v3`). |
+| [**`JerbilX/Dotfiles-v3`**](https://github.com/JerbilX/Dotfiles-v3) | Núcleo declarativo global (`GEMINI.md`, `skills.json`), skills universales (`adr-manager`, `issue-refiner`, `issue-driven-workflow`) y catálogo de plugins por dominio. | Repositorio base (`~/Proyectos-IA-V3/Dotfiles-v3`). |
 | [**`JerbilX/Codebase-Auditor-Agent`**](https://github.com/JerbilX/Codebase-Auditor-Agent) | CLI en Python y skill de solo lectura (`codebase-auditor`) para auditorías deterministas de deuda técnica, LOC, deriva arquitectónica y violaciones de ADRs. | Registrado declarativamente en [`config/skills.json`](./config/skills.json) (`~/Proyectos-IA-V3/Codebase-Auditor-Agent/skill`). |
 | [**`JerbilX/PR-Reviewer-Agent`**](https://github.com/JerbilX/PR-Reviewer-Agent) | CLI en Python y skill (`pr-reviewer`) para auditoría automatizada de Pull Requests con rúbrica Staff Software Engineer en GitHub. | Registrado declarativamente en [`config/skills.json`](./config/skills.json) (`~/Proyectos-IA-V3/PR-Reviewer-Agent/skill`). |
+| [**`JerbilX/Project-Manager-Agent`**](https://github.com/JerbilX/Project-Manager-Agent) | CLI en Python (`pm-agent`) y skill (`project-manager`) para orquestación técnica de lotes de GitHub Issues extremo a extremo sobre `dev` con gates deterministas y aislamiento por subagentes. | Registrado declarativamente en [`config/skills.json`](./config/skills.json) (`~/Proyectos-IA-V3/Project-Manager-Agent/skill`). |
 | [**`JerbilX/eso-mcp-server`**](https://github.com/JerbilX/eso-mcp-server) | Servidor MCP especializado en la API oficial de *The Elder Scrolls Online* (**EsoUI**), código fuente de ZOS, texturas, sonidos, linting estático y empaquetado. | Empaquetado como servidor MCP dentro del plugin [`plugins/eso-addon-suite`](./plugins/eso-addon-suite/). |
 | [**`JerbilX/RPQuests`**](https://github.com/JerbilX/RPQuests) | Addon narrativo y de rol para *The Elder Scrolls Online* (**RPQuest**), consumidor de referencia del plugin `eso-addon-suite`. | Carga `eso-addon-suite` declarativamente mediante `.agents/plugins.json` (`include_only: ["eso-addon-suite"]`). |
 
@@ -58,6 +59,8 @@ Dotfiles-v3/
 │   │   ├── SKILL.md
 │   │   └── resources/
 │   │       └── template.md
+│   ├── issue-refiner/                # Refinamiento de backlog por defecto (análisis + preguntas + borrador)
+│   │   └── SKILL.md
 │   └── issue-driven-workflow/        # Ciclo Git (dev -> main + SemVer Tags) y trazabilidad por Issues
 │       ├── SKILL.md
 │       └── references/
