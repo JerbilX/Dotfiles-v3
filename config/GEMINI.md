@@ -40,3 +40,15 @@ Cuando el Arquitecto pida **"dame al PM"** (o pregunte cómo continuar con el ba
 3. **Decisiones y Opciones Numeradas:** Si algún grupo requiere una decisión de diseño/ADR, incluir las opciones breves en el mismo resumen inicial. Recomendar el grupo más sencillo y ofrecer **opciones numeradas (`1, 2, 3...`)** para elegir qué grupo implementar o si se realiza otra acción (ej. promover `dev -> main` o atender otra tarea).
 4. **Ejecución Autónoma (`/goal`):** Al recibir la elección del Arquitecto, ejecutar el skill `project-manager` de principio a fin sobre el grupo elegido en modo autónomo continuo (implementación, review, merge a `dev` y auditoría final sin frenar entre tareas salvo bloqueo duro).
 5. **Cierre y Hallazgos Adicionales:** Al finalizar el grupo, entregar un cierre conciso y avisar cualquier hallazgo adicional importante detectado durante el trabajo (deuda técnica, colisiones, necesidad de ADR o estado listo para release), para que el Arquitecto decida si continuar con eso o volver a pedir **"dame al PM"**.
+
+## 7. Perfiles Canónicos de Modelo
+Tabla centralizada para mapear perfiles estables de complejidad a los modelos concretos vigentes en Antigravity (único lugar a actualizar cuando salgan reemplazos de modelos):
+
+| Perfil | Modelo Concreto Vigente | Parámetro `Model` en `invoke_subagent` | Uso Recomendado |
+| :--- | :--- | :--- | :--- |
+| `fast` | *Flash* | `"flash"` | Cambios acotados (`N1`), fixes rápidos, sincronización documental y revisiones ligeras. |
+| `balanced` | *Gemini 4 Carbon Medium* | `"inherit"` | Desarrollo general (`N1`/`N2`), lógica de dominio estándar, pruebas y refactors acotados. |
+| `deep` | *Neon High / Pro* | `"pro"` (o `"inherit"` si la sesión ya corre en `deep`) | Diseño arquitectónico complejo (`N2`), nuevos módulos con ADR, debugging profundo y auditorías críticas. |
+
+- **Metadato en GitHub Issues:** Toda issue refinada o creada debe incluir en la cabecera de `.issue_body` las líneas `**Ceremony:** <N1|N2>` y `**Model:** <fast|balanced|deep> (<Modelo Concreto>)`, sin depender de GitHub Labels.
+- **Restricción en Subagentes Implementadores:** Evitar variantes *Orchestrator* en subagentes implementadores (no asignarlas para tareas de escritura de código, edición de archivos o ejecución directa de issues).
