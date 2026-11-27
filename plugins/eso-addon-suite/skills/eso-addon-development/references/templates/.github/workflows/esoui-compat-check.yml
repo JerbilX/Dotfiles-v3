@@ -56,6 +56,11 @@ jobs:
 
           echo "Manifest APIVersion: ${API_VERSION:-<none>} | Latest ESOUI: ${LATEST_ID} (interface ${LATEST_INTERFACE})"
 
+          if [ -z "$LATEST_INTERFACE" ] || [ "$LATEST_INTERFACE" = "null" ]; then
+            echo "::warning::compatible.json returned no numeric interface entries; skipping check."
+            exit 0
+          fi
+
           if [ -n "$API_VERSION" ] && [ "$API_VERSION" -ge "$LATEST_INTERFACE" ]; then
             echo "APIVersion is up to date."
             exit 0
