@@ -4,19 +4,47 @@ Guía operativa para el arnés de pruebas unitarias, sincronización de metadato
 
 ---
 
-## 1. Sincronización de Manifiesto y Documentación (`README.md`)
+## 1. Layouts de Repositorio Soportados
 
-1. **Comandos Slash (`SLASH_COMMANDS`):**
-   * Cada vez que agregues o modifiques un comando de chat propio del addon (ej. `SLASH_COMMANDS["/rpquest"] = ...`), documéntalo en el `README.md` indicando su sintaxis y argumentos.
-   * No listes comandos nativos de EsoUI (`/reloadui`, `/script`) como si fueran propios del addon.
+El ecosistema soporta dos layouts de repositorio. Ajusta `addon_path` al invocar `eso_validate_addon`, `eso_package_addon` o `eso_scaffold_test_harness` según el layout del proyecto:
+
+1. **Layout `root` (ej. `RPQuest`):**
+   * El manifiesto (`<AddonName>.txt` o `<AddonName>.addon`), `<AddonName>.lua`, `src/`, `lang/` y `readme.txt` viven directamente en la raíz del repositorio (`.`).
+   * `addon_path`: `.` (raíz del repositorio).
+2. **Layout `Addon/<Name>/` (ej. `MasterWritsManager`, `MasterWritsAtHome`, `ESOInventoryHelper`):**
+   * Los archivos distribuibles del addon viven en `Addon/<AddonName>/` (manifiesto, código Lua/XML, `lang/`, `readme.txt`), mientras que `README.md`, `docs/`, `tests/`, `scripts/` y `.luacheckrc` permanecen en la raíz del repositorio.
+   * `addon_path`: `Addon/<AddonName>` (para `eso_validate_addon` y `eso_package_addon`). Las pruebas (`luajit tests/run.lua`) y `luacheck .` se ejecutan desde la raíz del repositorio.
+   * Independientemente del layout en Git, el `.zip` distribuible debe exponer siempre `<AddonName>/` en su raíz interna (nunca `Addon/<AddonName>/`).
+
+---
+
+## 2. Sincronización de Manifiesto y Documentación (`README.md` y BBCode)
+
+1. **Comandos Slash (`SLASH_COMMANDS`) vs. Keybinds:**
+   * **Si el addon expone comandos slash propios** (`SLASH_COMMANDS["/comando"] = ...`), documéntalos en `README.md` (y en `docs/esoui-description.bbcode` si aplica) indicando su sintaxis y argumentos. No listes comandos nativos de EsoUI (`/reloadui`, `/script`) como propios del addon.
+   * **Si el addon prioriza keybinds** (o define en `.agents/rules/release-and-docs.md` omitir comandos slash), documenta únicamente los keybinds y omite slash commands en `README.md` y `docs/esoui-description.bbcode`.
 2. **Dependencias (`## DependsOn:` y `## OptionalDependsOn:`):**
    * El archivo manifiesto (`.txt` o `.addon`) es la fuente de verdad técnica para el cliente de ESO.
-   * Mantén sincronizada la sección de requisitos/dependencias del `README.md` con las directivas del manifiesto.
+   * Mantén sincronizada la sección de requisitos/dependencias del `README.md` y `readme.txt` con las directivas del manifiesto.
    * Si en un proyecto existente detectas una discrepancia previa entre el manifiesto y el `README.md`, consulta al usuario antes de eliminar o agregar una dependencia.
 
 ---
 
-## 2. Versionado y Empaquetado Distribuible
+## 3. Estándares de Publicación en ESOUI.com / Minion
+
+Todo paquete distribuible destinado a **ESOUI.com** y **Minion** debe cumplir estos requisitos formales:
+
+* **Carpeta raíz `<AddonName>/` en el `.zip`:** El archivo `.zip` debe contener un único directorio raíz llamado exactamente `<AddonName>/` (coincidente con `<AddonName>.txt` / `<AddonName>.addon`), sin incluir rutas padre como `Addon/<AddonName>/` ni artefactos de desarrollo (`.git`, `.agents`, `.claude`, `.gemini`, `tests/`, `scripts/`, archivos Python, etc.).
+* **`## AddOnVersion:` en el manifiesto:** Entero positivo incremental (`## AddOnVersion: 1`, `2`, ...) distinto de la versión semántica (`## Version: 1.0.0`). Minion utiliza `AddOnVersion` para detectar actualizaciones.
+* **`compatible.json`:** Mantener sincronizado el archivo `compatible.json` con la `APIVersion` soportada en el manifiesto cuando el repositorio o el flujo de ESOUI/Minion lo requiera.
+* **Descripción en BBCode (`docs/esoui-description.bbcode`):** La ficha pública de ESOUI.com utiliza BBCode válido (no Markdown crudo). Respeta las convenciones locales de `.agents/rules/release-and-docs.md` si existen (por ejemplo, conservar el bloque destacado `[SIZE="4"][COLOR="DarkRed"][B]Notice:[/B][/COLOR]`).
+* **`readme.txt` dentro del `.zip`:** Incluir un `readme.txt` en texto plano dentro de `<AddonName>/` con descripción breve, instalación/uso, dependencias y la sección `AI Disclosure & Credits`.
+* **Transparencia de IA (`AI Disclosure`):** Mantener sincronizada una sección clara de **AI Disclosure & Credits** en `README.md`, `README.*.md`, `readme.txt` y `docs/esoui-description.bbcode`.
+* **No empaquetar dependencias:** Prohibido incluir librerías de terceros (`LibAddonMenu-2.0`, `LibMapPins`, `LibChatMessage`, etc.) dentro del `.zip` del addon. Decláralas únicamente en `## DependsOn:` o `## OptionalDependsOn:` para que el usuario o Minion las instalen por separado.
+
+---
+
+## 4. Versionado y Empaquetado Distribuible
 
 * **Manifiesto como Fuente de Verdad:** La versión pública y la versión entera para Minion/ESOUI se definen en el manifiesto:
   ```txt
@@ -25,12 +53,12 @@ Guía operativa para el arnés de pruebas unitarias, sincronización de metadato
   ```
 * **Token `@BUILD_VERSION@`:** El código Lua generado por `eso_scaffold_addon` utiliza `@BUILD_VERSION@` (o la constante centralizada del namespace) para evitar desincronizaciones manuales.
 * **Empaquetado con `eso_package_addon`:**
-  * Para generar el archivo `.zip` de distribución compatible con Minion y ESOUI.com, utiliza la herramienta MCP `eso_package_addon(addon_path, output_dir=..., validate_first=True)`.
-  * El empaquetador valida automáticamente que todos los archivos listados en el manifiesto existan en disco, estandariza la carpeta raíz `<AddonName>/` dentro del `.zip` y excluye artefactos de desarrollo (`.git`, `.agents`, `.claude`, `.gemini`, `tests/`, archivos Python, etc.).
+  * Para generar el archivo `.zip` de distribución compatible con Minion y ESOUI.com, utiliza `eso_package_addon(addon_path, output_dir=..., validate_first=True)` pasando `addon_path="."` (layout `root`) o `addon_path="Addon/<AddonName>"` (layout `Addon/<Name>/`).
+  * El empaquetador valida que todos los archivos listados en el manifiesto existan en disco, estandariza la carpeta raíz `<AddonName>/` dentro del `.zip` y excluye artefactos de desarrollo.
 
 ---
 
-## 3. Prevalencia del Motor EsoUI sobre los Mocks (Anti-Test-Induced Damage)
+## 5. Prevalencia del Motor EsoUI sobre los Mocks (Anti-Test-Induced Damage)
 
 * **La API de EsoUI manda sobre el Mock:** La fuente de verdad técnica es la API oficial indexada en `eso-mcp-server`.
 * **Qué hacer cuando falla un test por falta de soporte en el mock:**
@@ -39,7 +67,7 @@ Guía operativa para el arnés de pruebas unitarias, sincronización de metadato
 
 ---
 
-## 4. Estándares del Arnés de Pruebas (`tests/run.lua`)
+## 6. Estándares del Arnés de Pruebas (`tests/run.lua`)
 
 Para mantener ejecuciones rápidas, deterministas y amigables con la ventana de contexto y el sandbox:
 
@@ -53,3 +81,20 @@ Para mantener ejecuciones rápidas, deterministas y amigables con la ventana de 
    * Ejecuta siempre las pruebas con un comando directo y auto-aprobable en el sandbox:
      * `luajit tests/run.lua` (o `lua tests/run.lua`)
    * Evita bucles complejos en bash (`for f in ...; do ...; done`) o subshells innecesarias.
+
+---
+
+## 7. Plantillas Reutilizables para Nuevos Addons o Migraciones
+
+Para inicializar un addon nuevo o migrar un repositorio existente al pipeline estándar de ESOUI/Minion, copia las plantillas desde [`references/templates/`](templates/) y reemplaza los placeholders `<ADDON_NAME>`, `<ADDON_SUBDIR>` (`.` en layout `root`, o `Addon/<ADDON_NAME>` en layout `Addon/<Name>/`) y `<ESOUI_ID>`:
+
+| Plantilla | Destino en el Repo | Propósito |
+| :--- | :--- | :--- |
+| [`.github/workflows/ci.yml`](templates/.github/workflows/ci.yml) | `.github/workflows/ci.yml` | Ejecuta `tests/run.lua`, `luacheck .`, `check-esoui.sh --skip-package` y `package.sh`. |
+| [`.github/workflows/release.yml`](templates/.github/workflows/release.yml) | `.github/workflows/release.yml` | Empaqueta en tags `v*`, crea GitHub Release y publica en ESOUI.com (soporta `dry_run`). |
+| [`scripts/check-esoui.sh`](templates/scripts/check-esoui.sh) | `scripts/check-esoui.sh` | Valida guardas ESOUI, `pcall`, referencias locales, idiomas `$(language)`, `AI Disclosure` y empaquetado. |
+| [`scripts/package.sh`](templates/scripts/package.sh) | `scripts/package.sh` | Empaqueta `.zip` limpio con raíz `<ADDON_NAME>/` y estampa `Version` / `AddOnVersion`. |
+| [`scripts/bump-version.sh`](templates/scripts/bump-version.sh) | `scripts/bump-version.sh` | Calcula SemVer desde Conventional Commits y actualiza manifiesto, `Constants.lua` y `README.md`. |
+| [`.luacheckrc`](templates/.luacheckrc) | `.luacheckrc` | Configuración LuaJIT/EsoUI con `globals` y `read_globals` base. |
+| [`readme.txt`](templates/readme.txt) | `readme.txt` (o `Addon/<Name>/readme.txt`) | Instalación manual, uso y bloque `AI Disclosure & Credits`. |
+| [`docs/esoui-description.bbcode`](templates/docs/esoui-description.bbcode) | `docs/esoui-description.bbcode` | Ficha BBCode para ESOUI.com con bloque `Notice` y `AI Disclosure & Credits`. |

@@ -1,0 +1,140 @@
+# Reusable GitHub Actions Release workflow template for ESO Addons
+# Placeholders to replace:
+#   <ADDON_NAME>   - Addon name matching <ADDON_NAME>.txt / <ADDON_NAME>.addon
+#   <ADDON_SUBDIR> - "." for root layout, or "Addon/<ADDON_NAME>" for Addon/<Name>/ layout
+#   <ESOUI_ID>     - Numeric addon ID on ESOUI.com
+
+name: Release Package
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Use ESOUI updatetest endpoint instead of live update'
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository (full history for auto-versioning)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install LuaJIT and zip
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y luajit zip
+
+      - name: Run unit tests
+        run: luajit tests/run.lua
+
+      - name: Build clean ESOUI package
+        run: ./scripts/package.sh
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: <ADDON_NAME>-zip
+          path: dist/<ADDON_NAME>-*.zip
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/<ADDON_NAME>-*.zip
+          generate_release_notes: true
+
+      - name: Publish to ESOUI
+        if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+        env:
+          ESOUI_API_TOKEN: ${{ secrets.ESOUI_API_TOKEN }}
+          IS_DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+          ADDON_NAME: <ADDON_NAME>
+          ADDON_SUBDIR: <ADDON_SUBDIR>
+          ESOUI_ID: <ESOUI_ID>
+        run: |
+          if [ -z "$ESOUI_API_TOKEN" ]; then
+            echo "ESOUI_API_TOKEN secret is not set; skipping ESOUI upload."
+            exit 0
+          fi
+
+          if [ -z "$ADDON_SUBDIR" ] || [ "$ADDON_SUBDIR" = "." ]; then
+            ADDON_DIR="."
+          else
+            ADDON_DIR="$ADDON_SUBDIR"
+          fi
+
+          if [ -f "${ADDON_DIR}/${ADDON_NAME}.txt" ]; then
+            MANIFEST_FILE="${ADDON_DIR}/${ADDON_NAME}.txt"
+          elif [ -f "${ADDON_DIR}/${ADDON_NAME}.addon" ]; then
+            MANIFEST_FILE="${ADDON_DIR}/${ADDON_NAME}.addon"
+          else
+            echo "Error: manifest ${ADDON_NAME}.txt/.addon not found in ${ADDON_DIR}" >&2
+            exit 1
+          fi
+
+          ZIP_PATH=$(ls "dist/${ADDON_NAME}-"*.zip | head -n 1)
+          VERSION=$(basename "$ZIP_PATH" | sed -E "s/^${ADDON_NAME}-(.+)\\.zip$/\\1/")
+          : > changelog.txt
+          mapfile -t TAGS < <(git tag -l 'v*' --sort=-v:refname --merged HEAD)
+          for i in "${!TAGS[@]}"; do
+            TAG="${TAGS[$i]}"
+            NEXT_IDX=$((i + 1))
+            echo "[B]${TAG}[/B]" >> changelog.txt
+            if [ "$NEXT_IDX" -lt "${#TAGS[@]}" ]; then
+              PREV="${TAGS[$NEXT_IDX]}"
+              RAW_LOG=$(git log "${PREV}..${TAG}" --no-merges --pretty=format:"- %s")
+            else
+              RAW_LOG=$(git log "${TAG}" --no-merges --pretty=format:"- %s")
+            fi
+            PLAYER_LOG=$(printf '%s\n' "$RAW_LOG" | grep -E '^- (feat|fix|ui|perf|revert)(\(|:)' || true)
+            if [ -n "$PLAYER_LOG" ]; then
+              printf '%s\n' "$PLAYER_LOG" >> changelog.txt
+            else
+              echo "- Maintenance and internal improvements" >> changelog.txt
+            fi
+            printf "\n" >> changelog.txt
+          done
+          if [ ! -s changelog.txt ]; then
+            echo "Release ${VERSION}" > changelog.txt
+          fi
+
+          API_VERSION=$(awk -F': *' '/^## APIVersion:/{print $2; exit}' "$MANIFEST_FILE" | tr -d '\r' | awk '{print $NF}')
+          COMPATIBLE_JSON=$(curl -fsS -H "x-api-token: ${ESOUI_API_TOKEN}" "https://api.esoui.com/addons/compatible.json" || true)
+          COMPATIBILITY=$(printf '%s' "$COMPATIBLE_JSON" | jq -r --arg api "$API_VERSION" 'map(select(.interface == $api)) | .[0].id // empty' 2>/dev/null || true)
+          if [ -z "$COMPATIBILITY" ]; then
+            echo "::warning::Could not resolve ESOUI compatible version for APIVersion '${API_VERSION}'; omitting compatible parameter."
+          fi
+
+          ENDPOINT="https://api.esoui.com/addons/update"
+          if [ "$IS_DRY_RUN" = "true" ]; then
+            ENDPOINT="https://api.esoui.com/addons/updatetest"
+          fi
+
+          CURL_ARGS=(
+            --fail-with-body -sS -X POST "$ENDPOINT"
+            -H "x-api-token: ${ESOUI_API_TOKEN}"
+            -F "id=${ESOUI_ID}"
+            -F "version=${VERSION}"
+            -F "updatefile=@${ZIP_PATH}"
+            -F "changelog=<changelog.txt"
+            -F "description=<docs/esoui-description.bbcode"
+          )
+          if [ -n "$COMPATIBILITY" ]; then
+            CURL_ARGS+=(-F "compatible=${COMPATIBILITY}")
+            echo "Publishing ${ADDON_NAME} v${VERSION} (${ZIP_PATH}, compatible=${COMPATIBILITY}) to ${ENDPOINT}..."
+          else
+            echo "Publishing ${ADDON_NAME} v${VERSION} (${ZIP_PATH}) to ${ENDPOINT}..."
+          fi
+
+          curl "${CURL_ARGS[@]}"

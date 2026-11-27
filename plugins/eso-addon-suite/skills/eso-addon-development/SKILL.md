@@ -45,8 +45,8 @@ El servidor MCP indexa la documentación oficial (`ESOUIDocumentation.txt`), el 
    * `eso_scaffold_test_harness(addon_path, target_dir=None, overwrite=False)`: Genera o actualiza `tests/mocks/eso_ui_mock.lua` con mocks herméticos de EsoUI.
    * `eso_lint_code(code, addon_namespace=None, file_path=None)`: Audita código Lua contra la API oficial (detecta funciones/eventos/constantes inexistentes o deprecadas, errores en `SOUNDS.*` y polución del namespace global `_G`).
    * `eso_lint_xml(xml_content, file_path=None)`: Audita layouts XML (`GuiXml`) verificando tags, jerarquía de contenedores (`<Controls>`, `<Dimensions>`, `<Anchor>`) y tipos de atributos.
-   * `eso_validate_addon(addon_path, addon_namespace=None)`: Ejecuta validación estática integral sobre todos los archivos `.lua` y `.xml` del addon.
-   * `eso_package_addon(addon_path, output_dir=None, zip_name=None, validate_first=True)`: Empaqueta el addon en un archivo `.zip` limpio y compatible con Minion/ESOUI.
+   * `eso_validate_addon(addon_path, addon_namespace=None)`: Ejecuta validación estática integral sobre todos los archivos `.lua` y `.xml` del addon (`addon_path` debe apuntar a `.` en layout `root` o a `Addon/<AddonName>` en layout `Addon/<Name>/`).
+   * `eso_package_addon(addon_path, output_dir=None, zip_name=None, validate_first=True)`: Empaqueta el addon en un `.zip` limpio y compatible con ESOUI.com/Minion (carpeta raíz `<AddonName>/`, sin dependencias empaquetadas ni artefactos de desarrollo).
 
 5. **Inspección de `SavedVariables` (Solo Lectura):**
    * `eso_savedvars_inspect`, `eso_savedvars_get_account_wide`, `eso_savedvars_get_character`, `eso_savedvars_query`.
@@ -80,4 +80,5 @@ Lee estos documentos cuando trabajes en la arquitectura del código, interfaz XM
 | Dominio | Contenido | Referencia |
 | :--- | :--- | :--- |
 | **Arquitectura Lua y UI** | Aislamiento de namespace (`_G`), ciclo `EVENT_ADD_ON_LOADED`, `SavedVariables`, `ZO_PreHook`/`ZO_PostHook`, rendimiento/GC, centralización en `Constants.lua` y jerarquía `CT_TOPLEVELCONTROL`. | [references/lua-architecture.md](references/lua-architecture.md) |
-| **Testing, Build y Empaquetado** | Sincronización de manifiesto y `README.md`, uso de `@BUILD_VERSION@`, empaquetado con `eso_package_addon`, prevalencia de EsoUI sobre mocks y estándares del arnés de pruebas (`tests/run.lua`). | [references/build-and-packaging.md](references/build-and-packaging.md) |
+| **Testing, Build y Empaquetado** | Layouts `root` y `Addon/<Name>/`, estándares ESOUI.com/Minion (`<AddonName>/`, `AddOnVersion`, `compatible.json`, BBCode, `readme.txt`, `AI Disclosure`, sin dependencias), `@BUILD_VERSION@`, `eso_package_addon` y arnés `tests/run.lua`. | [references/build-and-packaging.md](references/build-and-packaging.md) |
+| **Plantillas Reutilizables (CI/CD, Scripts y Docs)** | Punto de partida para nuevos addons o migraciones (`ci.yml`, `release.yml`, `check-esoui.sh`, `package.sh`, `bump-version.sh`, `.luacheckrc`, `readme.txt`, `esoui-description.bbcode`) con placeholders `<ADDON_NAME>`, `<ADDON_SUBDIR>` y `<ESOUI_ID>`. | [references/templates/](references/templates/) |
