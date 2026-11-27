@@ -81,3 +81,20 @@ Para mantener ejecuciones rápidas, deterministas y amigables con la ventana de 
    * Ejecuta siempre las pruebas con un comando directo y auto-aprobable en el sandbox:
      * `luajit tests/run.lua` (o `lua tests/run.lua`)
    * Evita bucles complejos en bash (`for f in ...; do ...; done`) o subshells innecesarias.
+
+---
+
+## 7. Plantillas Reutilizables para Nuevos Addons o Migraciones
+
+Para inicializar un addon nuevo o migrar un repositorio existente al pipeline estándar de ESOUI/Minion, copia las plantillas desde [`references/templates/`](templates/) y reemplaza los placeholders `<ADDON_NAME>`, `<ADDON_SUBDIR>` (`.` en layout `root`, o `Addon/<ADDON_NAME>` en layout `Addon/<Name>/`) y `<ESOUI_ID>`:
+
+| Plantilla | Destino en el Repo | Propósito |
+| :--- | :--- | :--- |
+| [`.github/workflows/ci.yml`](templates/.github/workflows/ci.yml) | `.github/workflows/ci.yml` | Ejecuta `tests/run.lua`, `luacheck .`, `check-esoui.sh --skip-package` y `package.sh`. |
+| [`.github/workflows/release.yml`](templates/.github/workflows/release.yml) | `.github/workflows/release.yml` | Empaqueta en tags `v*`, crea GitHub Release y publica en ESOUI.com (soporta `dry_run`). |
+| [`scripts/check-esoui.sh`](templates/scripts/check-esoui.sh) | `scripts/check-esoui.sh` | Valida guardas ESOUI, `pcall`, referencias locales, idiomas `$(language)`, `AI Disclosure` y empaquetado. |
+| [`scripts/package.sh`](templates/scripts/package.sh) | `scripts/package.sh` | Empaqueta `.zip` limpio con raíz `<ADDON_NAME>/` y estampa `Version` / `AddOnVersion`. |
+| [`scripts/bump-version.sh`](templates/scripts/bump-version.sh) | `scripts/bump-version.sh` | Calcula SemVer desde Conventional Commits y actualiza manifiesto, `Constants.lua` y `README.md`. |
+| [`.luacheckrc`](templates/.luacheckrc) | `.luacheckrc` | Configuración LuaJIT/EsoUI con `globals` y `read_globals` base. |
+| [`readme.txt`](templates/readme.txt) | `readme.txt` (o `Addon/<Name>/readme.txt`) | Instalación manual, uso y bloque `AI Disclosure & Credits`. |
+| [`docs/esoui-description.bbcode`](templates/docs/esoui-description.bbcode) | `docs/esoui-description.bbcode` | Ficha BBCode para ESOUI.com con bloque `Notice` y `AI Disclosure & Credits`. |
