@@ -45,6 +45,7 @@ Aplica por igual a ambos layouts de repositorio del workspace:
   - `README.md` y `README.*.md` (ej. `README.es.md`)
   - `readme.txt` (incluido dentro de `<AddonName>/` en el paquete `.zip` para ESOUI)
 - Mantener `compatible.json` sincronizado con la `APIVersion` del manifiesto cuando el proyecto o flujo de ESOUI/Minion lo requiera.
+- Detectar nuevos parches de ESO con la plantilla `esoui-compat-check.yml` (cron semanal que abre una Issue cuando `compatible.json` publica una `interface` mayor a `## APIVersion:`); nunca subir `APIVersion` sin ejecutar antes `eso_validate_addon`.
 - Documentar comandos slash (`SLASH_COMMANDS`) únicamente si el addon los expone; si prioriza keybinds o define reglas locales en `.agents/rules/release-and-docs.md` (como conservar `[SIZE="4"][COLOR="DarkRed"][B]Notice:[/B][/COLOR]` y omitir slash commands en BBCode), documentar solo keybinds.
 
 ## 4. Checklist Obligatorio Pre-PR, Pre-Release y en `pr-reviewer`
@@ -55,4 +56,5 @@ Antes de abrir cualquier Pull Request hacia `dev`, promover una versión estable
 - [ ] Si el proyecto cuenta con script de validación/empaquetado (`./scripts/check-esoui.sh` y/o `./scripts/package.sh`), ejecutarlo y confirmar que pase todas las comprobaciones (guardas ESO, `pcall`, referencias locales al namespace, manifiesto, `AI Disclosure`, formato BBCode y generación del `.zip`).
 - [ ] `luacheck .` pasa con 0 errores y 0 advertencias (verificado localmente si está instalado y/o en CI).
 - [ ] `eso_validate_addon` (MCP) ejecutado sobre el directorio del addon (`.` en layout `root`, o `Addon/<AddonName>` en layout `Addon/<Name>/`) sin nuevos errores ni APIs inexistentes.
+- [ ] (Pre-release) `## APIVersion:` coincide con la `interface` vigente en `https://api.esoui.com/addons/compatible.json`.
 - [ ] Estándares ESOUI.com / Minion verificados: carpeta raíz `<AddonName>/` en el `.zip`, `AddOnVersion` actualizado, `compatible.json` (si aplica), `readme.txt`, `AI Disclosure`, `docs/esoui-description.bbcode` en BBCode y sin dependencias empaquetadas.
