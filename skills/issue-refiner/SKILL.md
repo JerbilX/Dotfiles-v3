@@ -36,10 +36,15 @@ Protocolo canónico para transformar comentarios, reportes de bugs, observacione
 - Presentar un borrador compacto de cada issue propuesta **antes** de ejecutar `gh issue create`:
   - **Título:** formato Conventional Commits en inglés (`<tipo>(<alcance>): <descripción>`, salvo regla local distinta).
   - **Nivel estimado:** `N1` o `N2`.
-  - **Modelo recomendado (Regla Hydrogen-First y `Ceremony != Model`):** `<fast|balanced|deep> (<Modelo Concreto>)`, consultando la tabla canónica vigente en `GEMINI.md` (evitando variantes *Orchestrator* para subagentes implementadores) y aplicando el criterio objetivo de complejidad cognitiva independientemente del volumen de archivos (`N1` vs `N2`):
-    1. **`fast` (*Gemini 4 Hydrogen Medium* — Default absoluto para `N1` y `N2`):** Toda tarea que extienda patrones existentes del repositorio con requisitos claros (UI/controles, campos simples en modelo/códec, eventos conocidos, traducciones, tests o análisis), sin importar cuántos archivos toque.
-    2. **`balanced` (*Gemini 4 Carbon Medium*):** Solo ante lógica condicional/máquinas de estado entre entidades, empaquetado binario delicado sin molde previo, refactors estructurales entre capas, o como escalado automático si un subagente `fast` rebota en `pr-reviewer`.
-    3. **`deep` (*Neon High / Pro*):** Exclusivamente para coordinación/estado multi-actor o multi-cliente, rediseño estructural de protocolos/ADRs de transporte o debugging crítico sin causa raíz conocida.
+  - **Modelo recomendado (Regla Hydrogen-First y `Ceremony != Model`):** `<fast|balanced|deep> (<Modelo Concreto>)`, aplicando la tabla canónica siguiente (evitando variantes *Orchestrator* para subagentes implementadores) según complejidad cognitiva independiente del volumen de archivos (`N1` vs `N2`):
+
+| Perfil | Modelo Concreto Vigente | Parámetro `Model` en `invoke_subagent` | Criterio Objetivo de Selección |
+| :--- | :--- | :--- | :--- |
+| `fast` | *Gemini 4 Hydrogen Medium* | `"inherit"` si la sesión ya corre en *Hydrogen*, o `"flash"` si corre en un modelo superior | **Default absoluto para `N1` y `N2`:** Toda tarea que extienda patrones existentes del repositorio con requisitos claros (UI/controles, campos simples en modelo/códec, eventos conocidos, traducciones, tests o análisis), sin importar cuántos archivos toque. |
+| `balanced` | *Gemini 4 Carbon Medium* | `"inherit"` en sesión `balanced` | Solo ante lógica condicional/máquinas de estado entre entidades, empaquetado binario delicado sin molde previo, refactors estructurales entre capas, o como **escalado automático si un subagente `fast` rebota en `pr-reviewer`**. |
+| `deep` | *Neon High / Pro* | `"pro"` (o `"inherit"` si la sesión ya corre en `deep`) | Exclusivamente para coordinación/estado multi-actor o multi-cliente, rediseño estructural de protocolos/ADRs de transporte o debugging crítico sin causa raíz conocida. |
+
+  - **Desacople `Ceremony != Model`:** El nivel de ceremonia (`N1` vs `N2`, volumen de archivos o necesidad de `pr-reviewer`) **no** determina el modelo. Tareas largas pero mecánicas son `N2` con perfil `fast`.
   - **Contexto / Alcance:** módulos afectados y si actualiza o se relaciona con alguna issue abierta.
   - **Criterios de aceptación:** lista breve y verificable.
 - Pedir confirmación explícita al Arquitecto (*"¿Confirmás que cree esta(s) issue(s) así, o ajustamos algo?"*) y **esperar su respuesta**.
