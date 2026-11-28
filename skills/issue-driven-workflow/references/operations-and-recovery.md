@@ -75,3 +75,53 @@ Como cada tarea entra a `dev` mediante `--squash`, cada Issue es **un único com
 Si el usuario desea comparar o restaurar el estado del proyecto a una versión estable previa congelada en `main`:
 - Para inspeccionar diferencias contra la última versión estable: `git diff main..dev` (o `git diff vX.Y.Z..dev`).
 - Cualquier acción que reescriba el historial de `dev` hacia un tag anterior requiere confirmación explícita del usuario.
+
+---
+
+## 5. Promoción de Versión Estable (`dev` -> `main` + Tag SemVer)
+
+Cuando el usuario ordene promover los avances de `dev` a producción/estable (*"pasemos dev a main"*, *"saquemos release v0.1.0"*):
+
+1. **Verificación Previa:** Asegurar que `dev` esté sincronizada y con todas las validaciones en verde.
+2. **Apertura del Release PR (`dev` -> `main`):**
+   Redactar en `.pr_body` el resumen de las issues y cambios incluidos en la versión y abrir el PR hacia `main`:
+   ```bash
+   gh pr create --base main --head dev --title "release: vX.Y.Z" --body-file .pr_body
+   ```
+   *(Limpiar `.pr_body` localmente con `rm -f .pr_body`)*.
+3. **Fusión con Merge Commit (`--merge`):**
+   > [!IMPORTANT]
+   > Entre ramas permanentes (`dev` -> `main`), usar siempre **`--merge`** (y NUNCA `--squash`). El Merge Commit preserva el historial de ancestros común entre `dev` y `main`, evitando conflictos artificiales en futuras promociones.
+   ```bash
+   gh pr merge <pr_id> --merge
+   ```
+4. **Creación del Tag SemVer Inmutable (Punto de Rollback Estable):**
+   Ejecutar como comandos separados para mantener el *prefix-matching*:
+   ```bash
+   git switch main
+   ```
+   ```bash
+   git pull --ff-only
+   ```
+   ```bash
+   git tag -a vX.Y.Z -m "Release vX.Y.Z"
+   ```
+   ```bash
+   git push origin vX.Y.Z
+   ```
+5. **Sincronizar `main` de vuelta a `dev` (preservar ancestro del tag):**
+   Al volver a `dev`, fusionar `main` hacia `dev` para que el merge commit etiquetado con `vX.Y.Z` sea ancestro directo de `dev` (usando `--ff-only` si `dev` no avanzó):
+   ```bash
+   git switch dev
+   ```
+   ```bash
+   git pull --ff-only
+   ```
+   ```bash
+   git merge main
+   ```
+   ```bash
+   git push origin dev
+   ```
+   > [!NOTE]
+   > Al consultar cuál es el último release estable desde `dev` (o en repositorios donde no se haya hecho este back-merge), evitar `git describe --tags --abbrev=0` sobre `dev`; usar `git describe --tags --abbrev=0 origin/main` o `git tag -l 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n 1`.

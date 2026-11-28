@@ -58,7 +58,7 @@ fix/issue-15-savedvars ──(PR: Squash Merge)──┘
 - **Precondición:** Este flujo solo se ejecuta ante una orden explícita de implementación. Si el usuario planteó un bug, idea o mejora sin ordenar implementación, usar el skill `issue-refiner` y detenerse tras crear la(s) issue(s).
 - **Si la Issue ya existe:** Leer su especificación con `gh issue view <id>` (incluyendo sus metadatos de cabecera `**Ceremony:**` y `**Model:**` si están presentes).
 - **Si la tarea surge en el chat con orden explícita de implementación inmediata y aún no tiene Issue:**
-  1. Redactar el cuerpo en `.issue_body` usando la herramienta nativa de escritura de archivos, incluyendo siempre en la cabecera los metadatos planos (según la tabla canónica de `GEMINI.md`, sin depender de GitHub Labels):
+  1. Redactar el cuerpo en `.issue_body` usando la herramienta nativa de escritura de archivos, incluyendo siempre en la cabecera los metadatos planos (según la tabla canónica de `skills/issue-refiner/SKILL.md`, sin depender de GitHub Labels):
      ```markdown
      **Ceremony:** <N1|N2>
      **Model:** <fast|balanced|deep> (<Modelo Concreto>)
@@ -125,7 +125,7 @@ fix/issue-15-savedvars ──(PR: Squash Merge)──┘
 
 ### Paso 6.5: Auditoría Pre-Merge (`pr-reviewer`) — Solo N2 y `/goal`
 Si la tarea es **N2** o se está ejecutando bajo **`/goal`**, antes de dar el PR por listo para merge:
-1. **Delegar en Subagente Limpio:** Invocar `invoke_subagent` (`TypeName: "self"`, `Role: "PR Staff Reviewer"`, ajustando `Model` según el nivel/perfil de la tarea definido en `GEMINI.md`: `"inherit"` para `fast` si la sesión ya corre en *Hydrogen Medium* o `"flash"` si corre en un modelo superior, `"inherit"` en sesión `balanced`, y `"pro"` o `"inherit"` para `deep`, evitando variantes *Orchestrator*) con contexto fresco (para evitar sesgo de autor), pasándole el path/repo y el número de PR recién creado, e instruyéndolo a leer y ejecutar el skill `pr-reviewer` publicando el review automáticamente en GitHub.
+1. **Delegar en Subagente Limpio:** Invocar `invoke_subagent` (`TypeName: "self"`, `Role: "PR Staff Reviewer"`, ajustando `Model` según el perfil de la tarea definido en `skills/issue-refiner/SKILL.md`: `"inherit"` para `fast` si la sesión ya corre en *Hydrogen Medium* o `"flash"` si corre en un modelo superior, `"inherit"` en sesión `balanced`, y `"pro"` o `"inherit"` para `deep`, evitando variantes *Orchestrator*) con contexto fresco (para evitar sesgo de autor), pasándole el path/repo y el número de PR recién creado, e instruyéndolo a leer y ejecutar el skill `pr-reviewer` publicando el review automáticamente en GitHub.
 2. **Si el veredicto es `REQUEST_CHANGES`:**
    - Corregir los hallazgos `BLOCKER`, hacer commit y `git push` en la misma rama efímera, y volver a lanzar la auditoría hasta obtener `APPROVE` (si un blocker requiere decisión de diseño/arquitectura del usuario y no estás en `/goal`, consultar al usuario). Si la implementación fue ejecutada por un subagente `fast` y rebota en `pr-reviewer`, escalar automáticamente a `balanced` (*Gemini 4 Carbon Medium*) para resolver los hallazgos.
 3. **Si el veredicto es `APPROVE`:**
@@ -156,56 +156,6 @@ Cuando el usuario apruebe el PR (*"aprobado, mergeá"*, *"mergealo"*):
 
 ---
 
-## 3. Promoción de Versión Estable (`dev` -> `main` + Tag SemVer)
+## 3. Promoción Estable (`dev` -> `main`), Escenarios Especiales y Recuperación
 
-Cuando el usuario ordene promover los avances de `dev` a producción/estable (*"pasemos dev a main"*, *"saquemos release v0.1.0"*):
-
-1. **Verificación Previa:** Asegurar que `dev` esté sincronizada y con todas las validaciones en verde.
-2. **Apertura del Release PR (`dev` -> `main`):**
-   Redactar en `.pr_body` el resumen de las issues y cambios incluidos en la versión y abrir el PR hacia `main`:
-   ```bash
-   gh pr create --base main --head dev --title "release: vX.Y.Z" --body-file .pr_body
-   ```
-   *(Limpiar `.pr_body` localmente con `rm -f .pr_body`)*.
-3. **Fusión con Merge Commit (`--merge`):**
-   > [!IMPORTANT]
-   > Entre ramas permanentes (`dev` -> `main`), usar siempre **`--merge`** (y NUNCA `--squash`). El Merge Commit preserva el historial de ancestros común entre `dev` y `main`, evitando conflictos artificiales en futuras promociones.
-   ```bash
-   gh pr merge <pr_id> --merge
-   ```
-4. **Creación del Tag SemVer Inmutable (Punto de Rollback Estable):**
-   Ejecutar como comandos separados para mantener el *prefix-matching*:
-   ```bash
-   git switch main
-   ```
-   ```bash
-   git pull --ff-only
-   ```
-   ```bash
-   git tag -a vX.Y.Z -m "Release vX.Y.Z"
-   ```
-   ```bash
-   git push origin vX.Y.Z
-   ```
-5. **Sincronizar `main` de vuelta a `dev` (preservar ancestro del tag):**
-   Al volver a `dev`, fusionar `main` hacia `dev` para que el merge commit etiquetado con `vX.Y.Z` sea ancestro directo de `dev` (usando `--ff-only` si `dev` no avanzó):
-   ```bash
-   git switch dev
-   ```
-   ```bash
-   git pull --ff-only
-   ```
-   ```bash
-   git merge main
-   ```
-   ```bash
-   git push origin dev
-   ```
-   > [!NOTE]
-   > Al consultar cuál es el último release estable desde `dev` (o en repositorios donde no se haya hecho este back-merge), evitar `git describe --tags --abbrev=0` sobre `dev`; usar `git describe --tags --abbrev=0 origin/main` o `git tag -l 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n 1`.
-
----
-
-## 4. Escenarios Especiales y Recuperación
-
-Para aprovisionamiento inicial de repositorios, atención de observaciones en Code Review, cierre de spikes de investigación sin código o rollbacks de emergencia, consultar [`references/operations-and-recovery.md`](./references/operations-and-recovery.md).
+Para el procedimiento completo de **Release (`dev` -> `main` + Tag SemVer)**, aprovisionamiento inicial de repositorios, atención de observaciones en Code Review, cierre de spikes de investigación sin código o rollbacks de emergencia, consultar [`references/operations-and-recovery.md`](./references/operations-and-recovery.md).
